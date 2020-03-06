@@ -27,6 +27,7 @@ var fs = require("fs");
 	var sources = null;
 	
 	var bluetoothEnabled = false;
+	var bluetoothDiscoverable = false;
 	var configuration = {};
 	
 	beo.bus.on('general', function(event) {
@@ -90,6 +91,14 @@ var fs = require("fs");
 			}
 		
 		}
+
+		if (event.header == "bluetoothDiscovery") {			
+			if (event.content.enabled != undefined && event.content.enabled) {
+				startBluetoothDiscovery(function(newStatus) {
+					beo.bus.emit("ui", {target: "bluetooth", header: "bluetoothSettings", content: {bluetoothDiscovery: newStatus}});
+				})
+			}		
+		}
 	});
 	
 	
@@ -101,6 +110,30 @@ var fs = require("fs");
 			} else {
 				bluetoothEnabled = false;
 				callback(false);
+			}
+		});
+	}
+
+	function getBluetoothDiscoveryStatus(callback) {
+		exec("bluetoothctl show | grep 'Discoverable: yes'").on('exit', function(code) {
+			if (code == 0) {
+				bluetoothDiscoverable = true;
+				callback(true);
+			} else {
+				bluetoothDiscoverable = false;
+				callback(false);
+			}
+		});
+	}
+
+	function startBluetoothDiscovery(callback) {
+		exec("bluetoothctl discoverable yes").on('exit', function(code) {
+			if (code == 0) {
+				bluetoothDiscoverable = true;
+				callback(true)
+			} else {
+				bluetoothDiscoverable = false;
+				callback(false)
 			}
 		});
 	}
@@ -230,6 +263,7 @@ var fs = require("fs");
 	
 module.exports = {
 	version: version,
-	isEnabled: getBluetoothStatus
+	isEnabled: getBluetoothStatus,
+	isDiscoveryRunning: getBluetoothDiscoveryStatus
 };
 

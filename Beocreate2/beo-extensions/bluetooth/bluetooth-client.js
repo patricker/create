@@ -1,6 +1,7 @@
 var bluetooth = (function() {
 
 var bluetoothEnabled = false;
+var bluetoothDiscovery = false;
 
 
 $(document).on("bluetooth", function(event, data) {
@@ -12,6 +13,17 @@ $(document).on("bluetooth", function(event, data) {
 		} else {
 			bluetoothEnabled = false;
 			$("#bluetooth-toggle").removeClass("on");
+		}
+		if (data.content.bluetoothDiscoverable) {
+			bluetoothDiscovery = false;
+			$("#bluetooth-discovery-start")
+				.removeClass("on")
+				.removeClass("disabled");
+		} else {			
+			bluetoothDiscovery = true;
+			$("#bluetooth-discovery-start")
+				.addClass("on")
+				.addClass("disabled");
 		}
 		beo.notify(false, "bluetooth");
 	}
@@ -28,9 +40,17 @@ function toggleEnabled() {
 	beo.send({target: "bluetooth", header: "bluetoothEnabled", content: {enabled: enabled}});
 }
 
+function startBluetoothDiscovery() {
+	enabled = (!bluetoothEnabled) ? true : false;
+	if (enabled) {
+		beo.notify({title: "Starting Bluetooth Discovery...", icon: "attention", timeout: false});
+	}
+	beo.send({target: "bluetooth", header: "bluetoothDiscovery", content: {enabled: enabled}});
+}
 
 return {
-	toggleEnabled: toggleEnabled
+	toggleEnabled: toggleEnabled,
+	startBluetoothDiscovery: startBluetoothDiscovery
 };
 
 })();
